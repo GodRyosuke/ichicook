@@ -19,8 +19,8 @@
         </div>
     </div>
     <?php
-    if (isset($materials)) {
-        var_dump($materials);
+    if (isset($nutritions)) {
+        var_dump($nutritions);
     }
     ?>
     <main>

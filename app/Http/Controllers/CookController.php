@@ -182,6 +182,43 @@ class CookController extends Controller
         return view('cook.welcome', compact('recentCooks', 'Category'));
     }
 
+    // データベースのフォーマットにしたがってデータを取り出す処理
+    // @param formattype 1: 材料、栄養
+    // @param formattype 2: 作り方
+    public function readcooktextdata($inputdata, &$outputdata, $formattype = 1)
+    {
+        if ($formattype == 1) { // 材料や栄養の場合
+            $startidx = 0;
+            $goalidx = 0;
+            $material = NULL;
+            $num_material = NULL;
+            for ($i = 0; $i < strlen($inputdata); $i++) {
+                if ($i < strlen($inputdata) - 3) {
+                    $data1 = $inputdata[$i + 1];
+                    $data2 = $inputdata[$i + 2];
+                    $data3 = $inputdata[$i + 3];
+                    if (($data1 == 'd') && ($data2 == 'd') && ($data3 == 'd')) {
+                        $goalidx = $i;
+                        $material = substr($inputdata, $startidx, $goalidx - $startidx + 1);
+                        $startidx = $goalidx + 4;
+                    }
+                    if (($data1 == 't') && ($data2 == 't') && ($data3 == 't')) {
+                        $goalidx = $i;
+                        $num_material = substr($inputdata, $startidx, $goalidx - $startidx + 1);
+                        $startidx = $goalidx + 4;
+                        if ($material && $num_material) {
+                            $outputdata[$material] = $num_material;
+                            $material = NULL;
+                            $num_materials = NULL;
+                        }
+                    }
+                }
+            }
+
+        } else { // 作り方の場合
+        }
+    }
+    
     public function detailview(Request $request)
     {
         $recipeID = $request->recipeID;
@@ -192,38 +229,18 @@ class CookController extends Controller
         $materials = array();
         $material_data = $recipedata->materials;
         // 材料のデータフォーマットにしたがって、データを取り出す
-        {
-            $startidx = 0;
-            $goalidx = 0;
-            $material = NULL;
-            $num_material = NULL;
-            Log::debug("--------------------------");
-            for ($i = 0; $i < strlen($material_data); $i++) {
-                if ($i < strlen($material_data) - 3) {
-                    $data1 = $material_data[$i + 1];
-                    $data2 = $material_data[$i + 2];
-                    $data3 = $material_data[$i + 3];
-                    
-                    if (($data1 == 'd') && ($data2 == 'd') && ($data3 == 'd')) {
-                        $goalidx = $i;
-                        $material = substr($material_data, $startidx, $goalidx - $startidx + 1);
-                        Log::debug("material:".$material);
-                        $startidx = $goalidx + 4;
-                    }
-                    if (($data1 == 't') && ($data2 == 't') && ($data3 == 't')) {
-                        $goalidx = $i;
-                        $num_material = substr($material_data, $startidx, $goalidx - $startidx + 1);
-                        $startidx = $goalidx + 4;
-                        if ($material && $num_material) {
-                            $materials[$material] = $num_material;
-                            Log::debug("num_material: ".$num_material);
-                            $material = NULL;
-                            $num_materials = NULL;
-                        }
-                    }
-                }
-            }
-        }
-        return view('cook.detail', compact('thisRecipe', 'materials'));
+        $this->readcooktextdata($material_data, $materials);
+        $thisRecipe['materials'] = $materials;
+
+        $thisRecipe['point'] = $recipedata->point;
+
+        $nutritions = array();
+        $nutritions_data = $recipedata->nutritions;
+        $this->readcooktextdata($nutritions_data, $nutritions);
+        $thisRecipe['nutritions'] = $nutritions;
+
+
+        
+        return view('cook.detail', compact('thisRecipe', 'nutritions'));
     }
 }
