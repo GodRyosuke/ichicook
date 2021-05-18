@@ -1,0 +1,55 @@
+main {
+    img {
+        display: block;
+        width: 100%;
+        height: auto;
+    }
+    .main-con {
+        display: flex;
+    }
+    .main-sections {
+        flex: 7;
+        .news {
+            .cards {
+                display: flex;
+            }
+        }
+        .searchresult {
+            .pagenation {
+                ul {
+                    display: flex;
+                    list-style: none;
+                    li {
+                        margin-right: 5px;
+                    }
+                }
+            }
+        }
+        .detail {
+            .rows {
+                // display: flex;
+                .row1 {
+                    flex: 1;
+                }
+                .row2 {
+                    flex: 1;
+                }
+            }
+        }
+        .cook-register {
+            .rows {
+                display: flex;
+                .row1 {
+                    flex: 4;
+                }
+                .row2 {
+                    flex: 6;
+                }
+            }
+        }
+    }
+    .sidebar {
+        flex: 3;
+    }
+
+}
