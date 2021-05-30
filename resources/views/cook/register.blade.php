@@ -49,6 +49,9 @@
     <?php
     endif;
     ?>
+    <?php if(isset($added_cat_error)): ?>
+        <div class="alert alert-danger">この名前のカテゴリはすでに登録されています</div>
+    <?php endif; ?>
     <?php if (isset($added_recipe)): ?>
     <div class="alert alert-primary">レシピを追加しました</div>
     <?php endif; ?>

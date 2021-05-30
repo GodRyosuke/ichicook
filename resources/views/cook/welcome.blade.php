@@ -12,8 +12,9 @@
     <div class="header">
         <div class="container">
             <h1><a href="#">市大お料理サイト</a></h1>
-            <form action="post">
-                <input type="text" placeholder="春のレシピ" class="form-control"> 
+            <form action="{{ route('ichicooksearch') }}" name="cooksearch" method='post'>
+                @csrf
+                <input type="text" placeholder="春のレシピ" class="form-control" name="search"> 
                 <button type="submit" class="btn btn-primary">検索</button>
             </form>
         </div>
@@ -23,11 +24,12 @@
             <div class="title">
                 <h1>おすすめレシピ</h1>
             </div>
-            <a href="#">
+            <?php $urlstr = "/cookdetail?recipeID=".$recommendRecipe->id; ?>
+            <a href="<?php echo url($urlstr); ?>">
                 <div class="card">
-                    <img src="{{ asset('img/test.jpg') }}" alt="">
-                    <div class="title">このレシピのタイトル</div>
-                    <div class="desc">このレシピの簡単な説明このレシピの簡単な説明このレシピの簡単な説明このレシピの簡単な説明</div>
+                    <img src="{{ Storage::url($recommendRecipe->picture_path) }}" alt="">
+                    <div class="title"><?php echo $recommendRecipe->title; ?></div>
+                    <div class="desc"><?php echo $recommendRecipe->excerpt; ?></div>
                 </div>
             </a>
         </div>
@@ -68,7 +70,8 @@
                         <?php
                         $count = 1;
                         foreach($Category as $cat): ?>
-                            <a href="#">
+                        <?php $urlstr = 'cooksearch?catname='.$cat->category; ?>
+                            <a href="<?php echo url($urlstr); ?>">
                                 <li><?php echo $cat->category; ?></li>
                             </a>
                         <?php

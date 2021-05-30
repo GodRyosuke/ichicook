@@ -26,6 +26,12 @@ class CookController extends Controller
         //
         $cat_data = $request->cat_data;
         if (isset($cat_data)) { // Categoryを登録するとき
+            // 同じ名前のカテゴリが既に登録されているかチェック
+            $exists = DB::table('categories')->where('category', $cat_data)->exists();
+            $added_cat_error = true;
+            if ($exists) {
+                return view('cook.register', compact('added_cat_error', 'Category', 'max_material', 'max_howtomake', 'max_nutrition'));
+            }
             Category::create([
                 'category' => $cat_data,
             ]);
@@ -179,13 +185,15 @@ class CookController extends Controller
         $Cook = Cook::all();
         $recentCooks = DB::table('cook')->orderByRaw('created_at DESC')->get();
         $Category = Category::all();
-        return view('cook.welcome', compact('recentCooks', 'Category'));
+        // 今は適当にid４のレシピを表示
+        $recommendRecipe = DB::table('cook')->where('id', 4)->first();
+        return view('cook.welcome', compact('recommendRecipe', 'recentCooks', 'Category'));
     }
 
     // データベースのフォーマットにしたがってデータを取り出す処理
     // @param formattype 1: 材料、栄養
     // @param formattype 2: 作り方
-    public function readcooktextdata($inputdata, &$outputdata, $formattype = 1)
+    private function readcooktextdata($inputdata, &$outputdata, $formattype = 1)
     {
         if ($formattype == 1) { // 材料や栄養の場合
             $startidx = 0;
@@ -215,7 +223,26 @@ class CookController extends Controller
                 }
             }
 
-        } else { // 作り方の場合
+        } elseif($formattype == 2) { // 作り方の場合
+            $startidx = 0;
+            $goalidx = 0;
+            $num_material = NULL;
+            for ($i = 0; $i < strlen($inputdata); $i++) {
+                if ($i < strlen($inputdata) - 3) {
+                    $data1 = $inputdata[$i + 1];
+                    $data2 = $inputdata[$i + 2];
+                    $data3 = $inputdata[$i + 3];
+                    if (($data1 == 't') && ($data2 == 't') && ($data3 == 't')) {
+                        $goalidx = $i;
+                        $num_material = substr($inputdata, $startidx, $goalidx - $startidx + 1);
+                        $startidx = $goalidx + 4;
+                        if ($num_material) {
+                            array_push($outputdata, $num_material);
+                            $num_material = NULL;
+                        }
+                    }
+                }
+            }
         }
     }
     
@@ -226,21 +253,124 @@ class CookController extends Controller
         $thisRecipe = array();
         $thisRecipe['title'] = $recipedata->title;
 
+        // 材料
         $materials = array();
         $material_data = $recipedata->materials;
         // 材料のデータフォーマットにしたがって、データを取り出す
         $this->readcooktextdata($material_data, $materials);
         $thisRecipe['materials'] = $materials;
-
-        $thisRecipe['point'] = $recipedata->point;
-
+        // 栄養
         $nutritions = array();
         $nutritions_data = $recipedata->nutritions;
         $this->readcooktextdata($nutritions_data, $nutritions);
         $thisRecipe['nutritions'] = $nutritions;
-
+        // カテゴリ
+        $cat_id = $recipedata->cat_ids;
+        $thiscat = DB::table('categories')->where('id', $cat_id)->first();
+        $thisRecipe['category'] = $thiscat->category;
+        // 調理時間
+        $thisRecipe['cooktime'] = $recipedata->cook_time;
+        // 人数
+        $thisRecipe['num_people'] = $recipedata->num_people;
+        // 製作者
+        $thisRecipe['created_by'] = $recipedata->created_by;
+        // 写真ファイルパス
+        $thisRecipe['picture_path'] = $recipedata->picture_path;
+        // 作り方
+        $htmk_data = array();
+        $this->readcooktextdata($recipedata->howtomake, $htmk_data, 2);
+        $thisRecipe['howtomake'] = $htmk_data;
+        // 作るポイント
+        $thisRecipe['point'] = $recipedata->point;
+        // 抜粋分
+        $thisRecipe['excerpt'] = $recipedata->excerpt;
+        // 更新日
+        $updated_date = array();
+        $updated_at = $recipedata->updated_at;
+        $year = substr($updated_at, 0, 4);
+        $month = substr($updated_at, 5, 2);
+        $month = ($month[0] == '0') ? $month[1] : $month; // 05月ー＞5月
+        $date = substr($updated_at, 8, 2);
+        $date = ($date[0] == '0') ? $date[1] : $date;
+        $updated_date['year'] = $year;
+        $updated_date['month'] = $month;
+        $updated_date['date'] = $date;
+        $thisRecipe['updated_at'] = $updated_date;
 
         
-        return view('cook.detail', compact('thisRecipe', 'nutritions'));
+        return view('cook.detail', compact('thisRecipe'));
+    }
+
+    private function splitBySpace($inputstr, &$outputstr)
+    {
+        $keywords = array();
+        $firstidx = 0;
+        $goalidx = 0;
+        // 半角スペースごとにキーワードを区切る
+        for ($i = 0; $i < strlen($inputstr); $i++) {
+            if ($inputstr[$i] == ' ' || $i == (strlen($inputstr) - 1)) {
+                if ($i == (strlen($inputstr) - 1)) {
+                    $i++;
+                }
+                $goalidx = $i;
+                $keyword = substr($inputstr, $firstidx, $goalidx - $firstidx);
+                array_push($keywords, $keyword);
+                $firstidx = $goalidx + 1;
+            }
+        }
+        // 全角スペースごとにキーワードを区切る
+        $temparray = array();
+        foreach($keywords as $keyword) {
+            $splitted = explode('　', $keyword);
+            if (count($splitted) == 1) { // 分割されなければそのまま追加
+                array_push($temparray, $keyword);
+            } else {
+                $temparray = $temparray + $splitted;
+            }
+        } 
+        $keywords = $temparray;
+        $outputstr = $keywords;
+    }
+
+    public function cooksearch(Request $request)
+    {
+        // カテゴリ検索の場合
+        if (isset($request->catname)) {
+            $catname = $request->catname;
+            $category = DB::table('categories')->where('category', $catname)->first();
+            $cat_id = $category->id;
+            // そのカテゴリが含まれるレシピを検索
+            $catResults = DB::table('cook')->where('cat_ids', $cat_id)->get();
+            return view('cook.searchresult', compact('catResults', 'catname'));
+        }
+
+        //
+        // 用語検索の場合
+        //
+        $keywords = array();
+        $this->splitBySpace($request->search, $keywords);
+        $searchResult = array();
+        foreach($keywords as $keyword) {
+            $query = "title like '%".$keyword."%' or materials like '%".$keyword."%'";
+            //$query = "title like '%".$keyword."%' or materials like '%".$keyword."%' or nutritions like '%".$keyword."%' or excerpt like '%".$keyword."%' or point like '%".$keyword."%' or created_by like '%".$keyword."%'";
+            $searchedcook = DB::table('cook')->whereRaw($query)->get();
+            array_push($searchResult, $searchedcook);
+        }
+
+        $query = "";
+        $firstflg = true;
+        foreach ($keywords as $keyword) {
+            $tempquery = "(title like '%".$keyword."%' or materials like '%".$keyword."%')";
+            if ($firstflg) {
+                $query = $tempquery;
+                $firstflg = false;
+                continue;
+            }
+            $query = $query."and ".$tempquery;
+        }
+        $tempresult = DB::table('cook')->whereRaw($query)->get();
+        array_push($searchResult, $tempresult);
+
+        return view('cook.searchresult', compact('keywords', 'searchResult'));
     }
 }

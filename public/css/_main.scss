@@ -26,13 +26,15 @@ main {
             }
         }
         .detail {
-            .rows {
-                // display: flex;
-                .row1 {
-                    flex: 1;
+            .materials, .nutritions {
+                display: flex;
+                ul {
+                    list-style: none;
+                    margin: 0;
+                    padding: 0;
                 }
-                .row2 {
-                    flex: 1;
+                ul.material, ul.nutrition {
+                    margin-right: 10px;
                 }
             }
         }

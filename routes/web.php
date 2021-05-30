@@ -16,8 +16,11 @@ use Illuminate\Support\Facades\Route;
 
 // トップ画面
 Route::get('/', 'App\Http\Controllers\CookController@welcomeview')->name('welcome');
+Route::post('/', 'App\Http\Controllers\CookController@cooksearch')->name('ichicooksearch');
 // レシピ登録画面
 Route::get('/cookregister', 'App\Http\Controllers\CookController@registerview')->name('cookregister');
 Route::post('/cookregister', 'App\Http\Controllers\CookController@register')->name('cookpost');
 // レシピの詳細ページ
 Route::get('/cookdetail', 'App\Http\Controllers\CookController@detailview')->name('cookdetail');
+// 検索結果のページ
+Route::get('/cooksearch', 'App\Http\Controllers\CookController@cooksearch')->name('cooksearch');

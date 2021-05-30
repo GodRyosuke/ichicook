@@ -12,71 +12,116 @@
     <div class="header">
         <div class="container">
             <h1><a href="{{ route('welcome') }}">市大お料理サイト</a></h1>
-            <form action="post">
+            <form action="post" method="post">
                 <input type="text" placeholder="春のレシピ" class="form-control"> 
                 <button type="submit" class="btn btn-primary">検索</button>
             </form>
         </div>
     </div>
-    <?php
-    if (isset($nutritions)) {
-        var_dump($nutritions);
-    }
-    ?>
     <main>
         <div class="container main-con">
             <div class="main-sections">
                 <div class="detail">
                     <div class="main-image">
-                        <img src="{{ asset('img/test.jpg') }}" alt="">
+                        <?php
+                        $picture_path = $thisRecipe['picture_path']; ?>
+                        <img src="{{ Storage::url($picture_path) }}" alt="">
                     </div>
                     <div class="rows">
-                        <div class="row1">
-                            <div class="material">
-                                <div class="title">
-                                    <h3>材料</h3>
-                                </div>
-                                <ul>
-                                    <li>トマト</li>
-                                    <li>トマト</li>
-                                    <li>トマト</li>
-                                    <li>トマト</li>
-                                </ul>
+                        <div class="recipe-title">
+                            <h2><?php echo $thisRecipe['title']; ?></h2>
+                            <?php $urlstr = 'cooksearch?catname='.$thisRecipe['category']; ?>
+                            カテゴリ：<a href="<?php echo url($urlstr); ?>"><?php echo $thisRecipe['category']; ?></a>
+                        </div>
+                        <div class="excerpt">
+                            <?php echo $thisRecipe['excerpt']; ?>
+                        </div>
+                        <div class="num-people">
+                            <div class="title">
+                                <h3>人数</h3>
                             </div>
-                            <div class="point">
-                                <div class="title">
-                                    <h3>作るポイント</h3>
-                                </div>
-                                <div class="desc">
-                                    Lorem ipsum dolor sit amet, consectetur adipisicing elit. Nostrum et officiis exercitationem quibusdam, quod quos qui iure beatae facilis reprehenderit minus quae ipsa eaque placeat culpa sint provident aliquam voluptatem!
-                                </div>
+                            <div class="desc">
+                                <?php echo $thisRecipe['num_people'].'人'; ?>
                             </div>
                         </div>
-                        <div class="row2">
-                            <div class="nutrition">
-                                <div class="title"><h3>栄養</h3></div>
-                                <ul>
-                                    <li>タンパク質　200g</li>
-                                    <li>タンパク質　200g</li>
-                                    <li>タンパク質　200g</li>
-                                    <li>タンパク質　200g</li>
-                                    <li>タンパク質　200g</li>
+                        <div class="nutrition-wrap">
+                            <div class="title">
+                                <h3>栄養成分</h3>
+                            </div>
+                            <div class="nutritions">
+                                <ul class="nutrition">
+                                    <?php
+                                    $nutritions = $thisRecipe['nutritions'];
+                                    foreach($nutritions as $ei => $num_ei):
+                                    ?>
+                                    <li><?php echo $ei; ?></li>
+                                    <?php endforeach; ?>
+                                </ul>
+                                <ul class="num_nutrition">
+                                    <?php
+                                    $nutritions = $thisRecipe['nutritions'];
+                                    foreach($nutritions as $ei => $num_ei):
+                                    ?>
+                                    <li><?php echo $num_ei; ?></li>
+                                    <?php endforeach; ?>
                                 </ul>
                             </div>
-                            <div class="howtomake">
-                                <div class="title">
-                                    <h3>作り方</h3>
-                                </div>
-                                <ol>
-                                    <li>キャベツをみじん切りにする</li>
-                                    <li>キャベツをみじん切りにする</li>
-                                    <li>キャベツをみじん切りにする</li>
-                                    <li>キャベツをみじん切りにする</li>
-                                    <li>キャベツをみじん切りにする</li>
-                                </ol>
+                        </div>
+                        <div class="material-wrap">
+                            <div class="title">
+                                <h3>材料</h3>
                             </div>
+                            <div class="materials">
+                                <ul class="material">
+                                <?php 
+                                $materials = $thisRecipe['materials'];
+                                foreach($materials as $mat => $mat_num):
+                                ?>
+                                <li><?php echo $mat; ?></li>
+                                <?php endforeach; ?>
+                                </ul>
+                                <ul class="material_num">
+                                <?php 
+                                $materials = $thisRecipe['materials'];
+                                foreach($materials as $mat => $mat_num):
+                                ?>
+                                <li><?php echo $mat_num; ?></li>
+                                <?php endforeach; ?>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="howtomake">
+                            <div class="title">
+                                <h3>作り方</h3>
+                            </div>
+                            <ol class="htmk-inner-container">
+                                <?php
+                                $htmks = $thisRecipe['howtomake'];
+                                foreach($htmks as $htmk):
+                                ?>
+                                <li><?php echo $htmk ?></li>
+                                <?php endforeach; ?>
+                            </ol>
+                        </div>
+                        <div class="point">
+                            <div class="title">
+                                <h3>作るポイント</h3>
+                            </div>
+                            <div class="desc">
+                                <?php echo $thisRecipe['point']; ?>
+                            </div>
+                        </div>
+                        <div class="updated_at">
+                            <?php
+                            $updated_data = $thisRecipe['updated_at'];
+                            ?>
+                            最終更新日：
+                            <?php echo $updated_data['year']; ?>年
+                            <?php echo $updated_data['month']; ?>月
+                            <?php echo $updated_data['date']; ?>日
                         </div>
                     </div>
+                    <a href="#">この記事を更新する</a>
                 </div>
             </div>
             <div class="sidebar">
