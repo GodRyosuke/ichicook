@@ -245,45 +245,45 @@ class CookController extends Controller
             }
         }
     }
-    
-    public function detailview(Request $request)
-    {
-        $recipeID = $request->recipeID;
-        $recipedata = DB::table('cook')->where('id', $recipeID)->first();
-        $thisRecipe = array();
-        $thisRecipe['title'] = $recipedata->title;
 
+    // データベースのフォーマットを配列に格納して使いやすく変換
+    private function getRecipedataFromDBformat($recipedata, &$output)
+    {
+        // タイトル
+        $output['title'] = $recipedata->title;
+        // id
+        $output['id'] = $recipedata->id;
         // 材料
         $materials = array();
         $material_data = $recipedata->materials;
         // 材料のデータフォーマットにしたがって、データを取り出す
         $this->readcooktextdata($material_data, $materials);
-        $thisRecipe['materials'] = $materials;
+        $output['materials'] = $materials;
         // 栄養
         $nutritions = array();
         $nutritions_data = $recipedata->nutritions;
         $this->readcooktextdata($nutritions_data, $nutritions);
-        $thisRecipe['nutritions'] = $nutritions;
+        $output['nutritions'] = $nutritions;
         // カテゴリ
         $cat_id = $recipedata->cat_ids;
         $thiscat = DB::table('categories')->where('id', $cat_id)->first();
-        $thisRecipe['category'] = $thiscat->category;
+        $output['category'] = $thiscat->category;
         // 調理時間
-        $thisRecipe['cooktime'] = $recipedata->cook_time;
+        $output['cooktime'] = $recipedata->cook_time;
         // 人数
-        $thisRecipe['num_people'] = $recipedata->num_people;
+        $output['num_people'] = $recipedata->num_people;
         // 製作者
-        $thisRecipe['created_by'] = $recipedata->created_by;
+        $output['created_by'] = $recipedata->created_by;
         // 写真ファイルパス
-        $thisRecipe['picture_path'] = $recipedata->picture_path;
+        $output['picture_path'] = $recipedata->picture_path;
         // 作り方
         $htmk_data = array();
         $this->readcooktextdata($recipedata->howtomake, $htmk_data, 2);
-        $thisRecipe['howtomake'] = $htmk_data;
+        $output['howtomake'] = $htmk_data;
         // 作るポイント
-        $thisRecipe['point'] = $recipedata->point;
+        $output['point'] = $recipedata->point;
         // 抜粋分
-        $thisRecipe['excerpt'] = $recipedata->excerpt;
+        $output['excerpt'] = $recipedata->excerpt;
         // 更新日
         $updated_date = array();
         $updated_at = $recipedata->updated_at;
@@ -295,9 +295,17 @@ class CookController extends Controller
         $updated_date['year'] = $year;
         $updated_date['month'] = $month;
         $updated_date['date'] = $date;
-        $thisRecipe['updated_at'] = $updated_date;
+        $output['updated_at'] = $updated_date;
+    }
+    
+    public function detailview(Request $request)
+    {
+        $recipeID = $request->recipeID;
+        $recipedata = DB::table('cook')->where('id', $recipeID)->first();
+        $thisRecipe = array();
+        // $thisRecipeにデータを入れる
+        $this->getRecipedataFromDBformat($recipedata, $thisRecipe);
 
-        
         return view('cook.detail', compact('thisRecipe'));
     }
 
@@ -350,17 +358,11 @@ class CookController extends Controller
         $keywords = array();
         $this->splitBySpace($request->search, $keywords);
         $searchResult = array();
-        foreach($keywords as $keyword) {
-            $query = "title like '%".$keyword."%' or materials like '%".$keyword."%'";
-            //$query = "title like '%".$keyword."%' or materials like '%".$keyword."%' or nutritions like '%".$keyword."%' or excerpt like '%".$keyword."%' or point like '%".$keyword."%' or created_by like '%".$keyword."%'";
-            $searchedcook = DB::table('cook')->whereRaw($query)->get();
-            array_push($searchResult, $searchedcook);
-        }
 
         $query = "";
         $firstflg = true;
         foreach ($keywords as $keyword) {
-            $tempquery = "(title like '%".$keyword."%' or materials like '%".$keyword."%')";
+            $tempquery = "(title like '%".$keyword."%' or materials like '%".$keyword."%' or nutritions like '%".$keyword."%' or howtomake like '%".$keyword."%' or excerpt like '%".$keyword."%')";
             if ($firstflg) {
                 $query = $tempquery;
                 $firstflg = false;
@@ -373,4 +375,22 @@ class CookController extends Controller
 
         return view('cook.searchresult', compact('keywords', 'searchResult'));
     }
+
+    public function showcookupdate(Request $request)
+    {
+        $max_material = $this->max_material_num; // 材料の登録個数
+        $max_howtomake = $this->max_howtomake_num; // 作り方の最大登録数
+        $max_nutrition = $this->max_nutrition_num; // 栄養素の最大登録数
+
+        $Category = Category::select('category')->get(); // Category databaseのcategoryカラムのみを抽出
+
+        $recipeid = $request->id;
+        $recipedata = DB::table('cook')->where('id', $recipeid)->first();
+        $thisRecipe = array();
+        $this->getRecipedataFromDBformat($recipedata, $thisRecipe);
+
+        
+        return view('cook.update', compact('Category', 'max_material', 'max_howtomake', 'max_nutrition', 'thisRecipe'));
+    }
+    
 }

@@ -121,7 +121,8 @@
                             <?php echo $updated_data['date']; ?>日
                         </div>
                     </div>
-                    <a href="#">この記事を更新する</a>
+                    <?php $urlstr = "/cookupdate?id=".$thisRecipe['id']; ?>
+                    <a href="<?php echo url($urlstr); ?>">この記事を更新する</a>
                 </div>
             </div>
             <div class="sidebar">

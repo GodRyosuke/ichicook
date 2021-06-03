@@ -20,7 +20,14 @@ Route::post('/', 'App\Http\Controllers\CookController@cooksearch')->name('ichico
 // レシピ登録画面
 Route::get('/cookregister', 'App\Http\Controllers\CookController@registerview')->name('cookregister');
 Route::post('/cookregister', 'App\Http\Controllers\CookController@register')->name('cookpost');
+// レシピ更新画面
+Route::get('/cookupdate', 'App\Http\Controllers\CookController@showcookupdate')->name('showcookupdate');
 // レシピの詳細ページ
 Route::get('/cookdetail', 'App\Http\Controllers\CookController@detailview')->name('cookdetail');
 // 検索結果のページ
 Route::get('/cooksearch', 'App\Http\Controllers\CookController@cooksearch')->name('cooksearch');
+
+
+
+
+

@@ -76,7 +76,7 @@
                             </a>
                         <?php
                         if ($count == 8) {
-                            break;
+                            //break;
                         }
                         $count++;
                         ?>
