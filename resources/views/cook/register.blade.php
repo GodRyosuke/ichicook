@@ -171,6 +171,9 @@
                         <input type="text" name="cat_data">
                         <button method="post">追加</button>
                     </form>
+                    
+                    <?php  $urlstr = 'login?is_logout=true' ?>
+                    ログアウトは<a href="<?php echo url($urlstr); ?>">こちら</a>から
                 </div>
             </div>
             <div class="sidebar">

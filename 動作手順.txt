@@ -1,0 +1,15 @@
+---動作手順---(windows10)
+1, xamppインストール
+2, phpmyadminのweb画面を立ち上げ、新規データベース'ichicook'を作成
+3, windowsキーを押して、cmdと入力すると、コマンドプロンプトが立ち上がるので、料理サイトのデータが入っているフォルダに移動し、（cdコマンドを使って移動し、）以下のコマンドを実行する。
+php artisan migrate
+4, 以下のコマンドを実行すると、下のような文字列が出てくるので、
+Starting Laravel development server: http://127.0.0.1:8000
+の、http://127.0.0.1:8000をブラウザのurlのところにペーストすると、料理サイトの画面が立ち上がる。
+
+コマンド: php artisan serve
+
+出てくる文字列
+Starting Laravel development server: http://127.0.0.1:8000
+[Tue Jun  8 08:47:57 2021] PHP 8.0.5 Development Server (http://127.0.0.1:8000) started
+等々

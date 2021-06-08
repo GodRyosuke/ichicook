@@ -111,6 +111,14 @@
                                 <?php echo $thisRecipe['point']; ?>
                             </div>
                         </div>
+                        <div class="created_by">
+                            <div class="title">
+                                <h3>このレシピを作った人</h3>
+                            </div>
+                            <div class="desc">
+                                <?php echo $thisRecipe['created_by']; ?>
+                            </div>
+                        </div>
                         <div class="updated_at">
                             <?php
                             $updated_data = $thisRecipe['updated_at'];

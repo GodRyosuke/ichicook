@@ -94,6 +94,7 @@
         <div class="container">
             <h1>これはフッターである。</h1>
             <h2><a href="{{ route('cookregister') }}">料理の新規追加</a></h2>
+            <h2><a href="{{ route('showcooklogin') }}">ログイン</a></h2>
         </div>
     </footer>
     

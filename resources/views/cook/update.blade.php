@@ -19,11 +19,6 @@
         </div>
     </div>
     <?php
-    if (isset($thisRecipe)) {
-        var_dump($thisRecipe);
-    }
-    ?>
-    <?php
     if (isset($cat_data)) {
         var_dump($cat_data);
     }
@@ -47,41 +42,36 @@
     ?>
     
     <main class="container">
-    <?php
-    if (isset($added_category)):
-    ?>
-    <div class=" alert alert-primary">カテゴリを追加しました</div>
-    <?php
-    endif;
-    ?>
     <?php if(isset($added_cat_error)): ?>
         <div class="alert alert-danger">この名前のカテゴリはすでに登録されています</div>
     <?php endif; ?>
-    <?php if (isset($added_recipe)): ?>
-    <div class="alert alert-primary">レシピを追加しました</div>
+    <?php if (isset($updated_recipe)): ?>
+    <div class="alert alert-primary">レシピを更新しました</div>
     <?php endif; ?>
     <?php
-    if (isset($add_recipe_error)):
+    if (isset($update_recipe_error)):
     ?>
-    <div class=" alert alert-danger">登録情報に誤りがあります</div>
+    <div class=" alert alert-danger">更新情報に誤りがあります</div>
     <?php
-    var_dump($add_recipe_error);
-    echo count($add_recipe_error);
+    var_dump($update_recipe_error);
+    echo count($update_recipe_error);
     endif;
     ?>
         <div class="main-con">
             <div class="main-sections">
                 <div class="cook-register">
-                    <h2>レシピ登録画面</h2>
-                    <form method="post" enctype="multipart/form-data" action="{{ route('cookpost') }}">
+                    <h2>レシピ更新画面</h2>
+                    <form method="post" enctype="multipart/form-data" action="{{ route('updaterecipe') }}">
                     @csrf
-                        <button class="btn btn-primary" type="submit">登録する</button>
+                        <button class="btn btn-primary" type="submit">更新する</button>
                         <div class="title">
                             <h3>レシピタイトル</h3>
                             <input type="text" name="title" value="<?php echo $thisRecipe['title']; ?>">
                         </div>
                         <div class="image">
-                            <h3>写真を登録</h3>
+                            <h3>現在の写真</h3>
+                            <img src="{{ Storage::url($thisRecipe['picture_path']) }}" alt="">
+                            <h3>写真を更新</h3>
                             <input type="file" name="image" accept="image/png, image/jpeg">
                         </div>
                         <div class="excerpt">
@@ -91,36 +81,12 @@
                         <div class="num_people">
                             <h3>人数</h3>
                             <select name="num_people" id="">
-                                <option value="1">1</option>
-                                <option value="2">2</option>
-                                <option value="3">3</option>
-                                <option value="4">4</option>
-                                <option value="5">5</option>
-                                <option value="6">6</option>
-                                <option value="7">7</option>
-                                <option value="8">8</option>
-                                <option value="9">9</option>
-                                <option value="10">10</option>
-                                <option value="11">11</option>
-                                <option value="12">12</option>
-                                <option value="13">13</option>
-                                <option value="14">14</option>
-                                <option value="15">15</option>
-                                <option value="16">16</option>
-                                <option value="17">17</option>
-                                <option value="18">18</option>
-                                <option value="19">19</option>
-                                <option value="20">20</option>
-                                <option value="21">21</option>
-                                <option value="22">22</option>
-                                <option value="23">23</option>
-                                <option value="24">24</option>
-                                <option value="25">25</option>
-                                <option value="26">26</option>
-                                <option value="27">27</option>
-                                <option value="28">28</option>
-                                <option value="29">29</option>
-                                <option value="30">30</option>
+                            <?php for ($i = 0; $i <= 30; $i++): ?>
+                                <option value="<?php echo $i; ?>" <?php
+                                if ($i == $thisRecipe['num_people']){
+                                    echo 'selected';
+                                } ?>><?php echo $i; ?></option>
+                            <?php endfor; ?>
                             </select>
                         </div>
                         <div class="time">
@@ -150,20 +116,37 @@
                         <div class="howtomake">
                             <h3>作り方</h3>
                             <ol>
+                                <?php
+                                $howtomakes = $thisRecipe['howtomake'];
+                                $array_size = count($howtomakes);
+                                ?>
                                 <?php for($i = 1; $i <= $max_howtomake; $i++): ?>
+                                    <?php if ($i - 1 < $array_size): ?>
+                                <li><input type="text" name="howtomake<?php echo $i; ?>" value="<?php echo $howtomakes[$i - 1]; ?>"></li>
+                                   <?php else: ?>
                                 <li><input type="text" name="howtomake<?php echo $i; ?>"></li>
+                                    <?php endif; ?>
                                 <?php endfor; ?>
                             </ol>
                         </div>
                         <div class="point">
                             <h3>作る際のポイント</h3>
-                            <textarea id="" cols="30" rows="10" name="point"></textarea>
+                            <textarea id="" cols="30" rows="10" name="point"><?php echo $thisRecipe['point']; ?></textarea>
                         </div>
                         <div class="nutrition">
                             <h3>栄養素</h3>
                             <ul>
-                            <?php for ($i = 1; $i <= $max_nutrition; $i++): ?>
-                                <li><input type="text" name="nutrition<?php echo $i; ?>"><input type="text" name="num_nutrition<?php echo $i; ?>"></li>
+                            <?php
+                            $nutritions = $thisRecipe['nutritions'];
+                            $i = 1;
+                            foreach($nutritions as $nutrition => $num_nutrition):
+                            ?>
+                            <li><input type="text" name="nutrition<?php echo $i; ?>" value="<?php echo $nutrition; ?>"><input type="text" name="num_nutrition<?php echo $i; ?>" value="<?php echo $num_nutrition; ?>"></li>
+                            <?php 
+                            $i++;
+                            endforeach; ?>
+                            <?php for (; $i <= $max_nutrition; $i++): ?>
+                            <li><input type="text" name="nutrition<?php echo $i; ?>"><input type="text" name="num_nutrition<?php echo $i; ?>"></li>
                             <?php endfor; ?>
                             </ul>
                         </div>
@@ -171,22 +154,22 @@
                             <h3>カテゴリ</h3>
                             <select name="category" id="">
                             <?php foreach($Category as $cat): ?>
-                                <option value="<?php echo $cat->category; ?>"><?php echo $cat->category; ?></option>
+                                <option value="<?php echo $cat->category; ?>"<?php
+                                if ($cat->category == $thisRecipe['category']) {
+                                    echo "selected";
+                                } ?>><?php echo $cat->category; ?></option>
                             <?php endforeach; ?>
                             </select>
                         </div>
                         <div class="created_by">
                             <h3>このレシピを作った人の名前</h3>
-                            <input type="text" name="created_by">
+                            <input type="text" name="created_by" value="<?php echo $thisRecipe['created_by']; ?>">
+                        </div>
+                        <div style="display: none">
+                            <input type="text" name="id" value="<?php echo $thisRecipe['id']; ?>">
                         </div>
 
-                        <button class="btn btn-primary" type="submit">登録する</button>
-                    </form>
-                    <h2>カテゴリを新規追加する</h2>
-                    <form action="{{ route('cookpost') }}" name="registercat" method="post">
-                    @csrf
-                        <input type="text" name="cat_data">
-                        <button method="post">追加</button>
+                        <button class="btn btn-primary" type="submit">更新する</button>
                     </form>
                 </div>
             </div>

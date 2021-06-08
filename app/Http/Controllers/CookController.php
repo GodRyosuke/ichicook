@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Cook;
 use App\Models\Category;
+use App\Models\CookAuth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Log;
@@ -177,7 +178,11 @@ class CookController extends Controller
         $max_nutrition = $this->max_nutrition_num; // 栄養素の最大登録数
 
         $Category = Category::select('category')->get(); // Category databaseのcategoryカラムのみを抽出
-        return view('cook.register', compact('Category', 'max_material', 'max_howtomake', 'max_nutrition'));
+
+        if ($request->session()->has('is_login')) {
+            return view('cook.register', compact('Category', 'max_material', 'max_howtomake', 'max_nutrition'));
+        }
+        return redirect('/');
     }
 
     public function welcomeview(Request $request)
@@ -389,8 +394,187 @@ class CookController extends Controller
         $thisRecipe = array();
         $this->getRecipedataFromDBformat($recipedata, $thisRecipe);
 
+        if ($request->session()->has('is_login')) {
+            return view('cook.update', compact('Category', 'max_material', 'max_howtomake', 'max_nutrition', 'thisRecipe'));
+        }
+        return redirect('/');
+    }
+
+    public function updaterecipe(Request $request)
+    {
+        $max_material = $this->max_material_num; // 材料の登録個数
+        $max_howtomake = $this->max_howtomake_num; // 作り方の最大登録数
+        $max_nutrition = $this->max_nutrition_num; // 栄養素の最大登録数
+
+        $Category = Category::select('category')->get(); // Category databaseのcategoryカラムのみを抽出
+
+        // $thisRecipeData = DB::table('cook')->where('id', $request->id)->first();
+        $thisRecipeData = Cook::where('id', $request->id)->first();
+        //
+        // レシピ更新処理
+        //
+        $update_recipe_error = array();
+        $title = $request->title;
+        if (!isset($title)) {
+            $update_recipe_error['title'] = true;
+        }
+        // レシピ画像登録処理
+        $image = $request->file('image');
+        $picture_path = $thisRecipeData->picture_path;
+        $picture_name = $thisRecipeData->picture_name;
+        if ($image) { // 画像の名前、ファイルパスの登録処理
+            $picture_path = $image->store('uploads', 'public');
+            if ($picture_path) {
+                $picture_name = $image->getClientOriginalName();
+            }
+        }
+        $excerpt = $request->excerpt;
+        if (!isset($excerpt)) {
+            $update_recipe_error['excerpt'] = true;
+        }
+        $num_people = $request->num_people;
+        $time = $request->time;
+        if (!isset($time)) {
+            $update_recipe_error['time'] = true;
+        }
+
+        // 材料データの抽出
+        $materials = "";
+        $material_error = true;
+        for ($i = 1; $i <= $max_material; $i++) {
+            $materialname = "material".$i;
+            $num_material_name = "num_material".$i;
+            $material_data = $request->input($materialname);
+            $num_material_data = $request->input($num_material_name);
+            // 材料が登録送信されていれば、取り出す
+            if (isset($material_data) && isset($num_material_data)) {
+                $temp_material = $material_data."ddd".$num_material_data."ttt";
+                $materials = $materials.$temp_material;
+                $material_error = false;
+            } 
+        }
+        if ($material_error) {
+            $update_recipe_error['material'] = true;
+        }
+         // 作り方の抽出
+        $howtomakes = "";
+        $howtomake_error = true;
+        for ($i = 1; $i <= $max_howtomake; $i++) {
+            $htmk_name = "howtomake".$i;
+            $htmk_data = $request->input($htmk_name);
+            if (isset($htmk_data)) {
+                $howtomakes = $howtomakes.$htmk_data."ttt";
+                $howtomake_error = false;
+            }
+        }
+        if ($howtomake_error) {
+            $update_recipe_error['howtomake'] = true;
+        }
+        // 栄養素の抽出
+        $nutritions = "";
+        $nutrition_error = true;
+        for ($i = 1; $i <= $max_nutrition; $i++) {
+            $nutrition_name = "nutrition".$i;
+            $num_nutrition_name = "num_nutrition".$i;
+            $nutrition_data = $request->input($nutrition_name);
+            $num_nutrition_data = $request->input($num_nutrition_name);
+            if (isset($nutrition_data) && isset($num_nutrition_data)) {
+                $nutritions = $nutritions.$nutrition_data."ddd".$num_nutrition_data."ttt";
+                $nutrition_error = false;
+            }
+        }
+        if ($nutrition_error) {
+            $update_recipe_error['nutrition'] = true;
+        }
         
-        return view('cook.update', compact('Category', 'max_material', 'max_howtomake', 'max_nutrition', 'thisRecipe'));
+        $point = $request->point;
+        if (!isset($point)) {
+            $update_recipe_error['point'] = true;
+        }
+        // 名前と一致するカテゴリのidを取り出す
+        $category = $request->category;
+        if (!isset($category)) {
+            $update_recipe_error['category'] = true;
+        }
+        $cat_id = NULL;
+        $this_category = DB::table('categories')->whereRaw('category=?', [$category])->first();
+        if (isset($this_category)) {
+            $cat_id = $this_category->id;
+        }
+
+        $created_by = $request->created_by;
+        if (!isset($created_by)) {
+            $update_recipe_error['created_by'] = true;
+        }
+
+
+      if (count($update_recipe_error) == 0) {
+            // レシピ更新処理
+            $thisRecipeData->title = $title;
+            $thisRecipeData->picture_name = $picture_name;
+            $thisRecipeData->picture_path = $picture_path;
+            $thisRecipeData->excerpt = $excerpt;
+            $thisRecipeData->num_people = $num_people;
+            $thisRecipeData->created_by = $created_by;
+            $thisRecipeData->cook_time = $time;
+            $thisRecipeData->materials = $materials;
+            $thisRecipeData->howtomake = $howtomakes;
+            $thisRecipeData->nutritions = $nutritions;
+            $thisRecipeData->point = $point;
+            $thisRecipeData->cat_ids = $cat_id;
+
+            $thisRecipeData->save();
+            $updated_recipe = true;
+
+            
+            $recipeid = $request->id;
+            $recipedata = DB::table('cook')->where('id', $recipeid)->first();
+            $thisRecipe = array();
+            $this->getRecipedataFromDBformat($recipedata, $thisRecipe);
+
+            return view('cook.update', compact('Category', 'max_material', 'max_howtomake', 'max_nutrition', 'updated_recipe', 'thisRecipe'));
+        } else {
+            $thisRecipe = array();
+            $this->getRecipedataFromDBformat($thisRecipeData, $thisRecipe);
+            return view('cook.update', compact('Category', 'max_material', 'max_howtomake', 'max_nutrition', 'update_recipe_error', 'thisRecipe'));
+        }
+        
+    }
+
+    public function cooklogin(Request $request)
+    {
+        // ログインid追加
+        if (isset($request->add_id)) {
+            CookAuth::create([
+                'user_id' => $request->add_id,
+            ]);
+            return view ('cook.login');
+        }
+
+        // ログイン処理
+        if (isset($request->login)) {
+            $authdata = DB::table('cookauth')->where('user_id', $request->login)->first();
+            $is_login = false;
+            if (isset($authdata)) {
+                $request->session()->put('is_login', true);
+                $is_login = true;
+            } 
+            return view ('cook.login', compact('is_login'));
+        }
+    }
+
+    public function showcooklogin(Request $request)
+    {
+        // ログアウト処理
+        if (isset($request->is_logout)) {
+            if ($request->session()->has('is_login')) {
+                $request->session()->forget('is_login');
+            }
+            $is_logout = true;
+            return view('cook.login', compact('is_logout'));
+        }
+
+        return view('cook.login');
     }
     
 }

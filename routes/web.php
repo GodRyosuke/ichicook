@@ -22,10 +22,14 @@ Route::get('/cookregister', 'App\Http\Controllers\CookController@registerview')-
 Route::post('/cookregister', 'App\Http\Controllers\CookController@register')->name('cookpost');
 // レシピ更新画面
 Route::get('/cookupdate', 'App\Http\Controllers\CookController@showcookupdate')->name('showcookupdate');
+Route::post('/cookupdate', 'App\Http\Controllers\CookController@updaterecipe')->name('updaterecipe');
 // レシピの詳細ページ
 Route::get('/cookdetail', 'App\Http\Controllers\CookController@detailview')->name('cookdetail');
 // 検索結果のページ
 Route::get('/cooksearch', 'App\Http\Controllers\CookController@cooksearch')->name('cooksearch');
+// ログインのページ
+Route::get('/login', 'App\Http\Controllers\CookController@showcooklogin')->name('showcooklogin');
+Route::post('/login', 'App\Http\Controllers\CookController@cooklogin')->name('cooklogin');
 
 
 
