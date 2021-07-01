@@ -7,6 +7,8 @@ use App\Models\Category;
 use App\Models\CookAuth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use \Symfony\Component\HttpFoundation\StreamedResponse;
 use Log;
 
 class CookController extends Controller
@@ -577,4 +579,36 @@ class CookController extends Controller
         return view('cook.login');
     }
     
+    public function registerByCsv(Request $request)
+    {
+
+        
+        return redirect('/');
+    }
+
+    public function downloadCsv(Request $request)
+    {
+        $cooks = Cook::all();
+        $response = new StreamedResponse(function () use ($cooks) {
+            $fp = fopen('php://output', 'w');
+            $header = ['id', 'レシピ名', '材料', '栄養素', 'カテゴリ', '調理時間', '人数', 'レシピを考えた人', '作り方', '作るポイント', 'レシピの抜粋文'];
+            stream_filter_prepend($fp, 'convert.iconv.utf-8/cp932');
+            fputcsv($fp, $header);
+            foreach($cooks as $cook) {
+                $catname = DB::table('categories')->where('id', $cook->cat_ids)->first();
+                $data = [$cook->id, $cook->title, $cook->materials, $cook->nutritions, $catname->category, $cook->cook_time,
+                    $cook->num_people, $cook->created_by, $cook->howtomake, $cook->point, $cook->excerpt];
+                fputcsv($fp, $data);
+            }
+
+            fclose($fp);
+        },
+        Response::HTTP_OK,
+        [
+            'Content-Type'  => 'text/csv',
+            'Content-Disposition'   => 'attachment; filename="cook.csv"',
+        ]);
+
+        return $response;
+    }
 }

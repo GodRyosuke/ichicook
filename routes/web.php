@@ -20,6 +20,10 @@ Route::post('/', 'App\Http\Controllers\CookController@cooksearch')->name('ichico
 // レシピ登録画面
 Route::get('/cookregister', 'App\Http\Controllers\CookController@registerview')->name('cookregister');
 Route::post('/cookregister', 'App\Http\Controllers\CookController@register')->name('cookpost');
+// csvによる一括登録処理
+Route::get('/cookregiter/csv', function () { return view('cook.csv'); })->name('showCsvFrom');
+Route::post('/cookregister/csv', 'App\Http\Controllers\CookController@registerByCsv')->name('registerByCsv');
+Route::get('/cookregister/csv/download', 'App\Http\Controllers\CookController@downloadCsv')->name('downloadCsv');
 // レシピ更新画面
 Route::get('/cookupdate', 'App\Http\Controllers\CookController@showcookupdate')->name('showcookupdate');
 Route::post('/cookupdate', 'App\Http\Controllers\CookController@updaterecipe')->name('updaterecipe');
